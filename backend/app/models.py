@@ -7,7 +7,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     data_sources = db.Column(db.Text, nullable=False)     # JSON string
-    filters = db.Column(db.Text, nullable=False)          # JSON string
+    filters = db.Column(db.Text)          # JSON string
     status = db.Column(db.String(50), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

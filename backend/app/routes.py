@@ -46,20 +46,16 @@ def get_field_details():
     result = {}
     for col in df.columns:
         try:
-            # Try converting to numeric
-            numeric_series = pd.to_numeric(df[col].dropna())
+            # Convert only the first 10 non-null values to numeric
+            sample = df[col].iloc[:10].dropna()
+            pd.to_numeric(sample)
             result[col] = {
-                "type": "numeric",
-                "min": float(numeric_series.min()),
-                "max": float(numeric_series.max())
+                "type": "numeric"
             }
         except ValueError:
             # Categorical
-            unique_vals = df[col].dropna().unique().tolist()
-            # Convert all categorical values to strings (safe)
             result[col] = {
-                "type": "categorical",
-                "values": [str(val) for val in unique_vals]
+                "type": "categorical"
             }
 
     return jsonify(result)
@@ -70,14 +66,27 @@ def create_task():
     def extract_filters(data_sources):
         filters = []
         for ds in data_sources:
-            filters.append({
-                "source": ds["selectedSource"],
-                "fieldFilters": ds.get("fieldFilters", {})
-            })
+            field_filters = ds.get("fieldFilters", {})
+
+            # Filter out fields with no usable data
+            clean_filters = {}
+            for field, filter_data in field_filters.items():
+                print(field, len(filter_data))
+                if not filter_data:
+                    continue  # Skip if it's an empty dict
+
+                # Keep only if at least one non-empty value exists
+                if any(v for v in filter_data.values()):
+                    clean_filters[field] = filter_data
+
+            if clean_filters:
+                filters.append({
+                    "source": ds["selectedSource"],
+                    "fieldFilters": clean_filters
+                })
         return filters
 
     data = request.get_json()
-    print("Received data:", data)
 
     task_name = data.get("taskName")
     data_sources = data.get("dataSources")
@@ -88,10 +97,11 @@ def create_task():
     task = Task(
         name=task_name,
         data_sources=json.dumps(data_sources),
-        filters=json.dumps(extract_filters(data_sources)),  # see helper below
+        filters=json.dumps(extract_filters(data_sources)),
         status="pending"
     )
 
+    print("task: ", task.filters)
     db.session.add(task)
     db.session.commit()
 
