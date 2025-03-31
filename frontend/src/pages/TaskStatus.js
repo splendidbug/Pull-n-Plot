@@ -1,14 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from "@mui/material";
+import io from "socket.io-client";
 
 function TaskStatus() {
   const [tasks, setTasks] = useState([]);
-
   useEffect(() => {
     fetch("http://localhost:5000/api/tasks")
       .then((res) => res.json())
       .then((data) => setTasks(data))
       .catch((err) => console.error("Failed to fetch tasks:", err));
+  }, []);
+
+  useEffect(() => {
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+
+    socket.onAny((event, ...args) => {
+      console.log("🔍 Received event:", event, args);
+    });
+
+    socket.on("task_update", (update) => {
+      console.log("Task update received:", update);
+      setTasks((prevTasks) => prevTasks.map((task) => (task.id === update.taskId ? { ...task, status: update.status } : task)));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   return (

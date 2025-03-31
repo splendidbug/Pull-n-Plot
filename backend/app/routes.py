@@ -4,6 +4,9 @@ import os
 from app import db
 from app.models import Task
 import json
+import threading
+from app.job_queue import simulate_task_processing
+
 
 main = Blueprint('main', __name__)
 
@@ -101,9 +104,13 @@ def create_task():
         status="pending"
     )
 
-    print("task: ", task.filters)
     db.session.add(task)
     db.session.commit()
+
+    threading.Thread(
+        target=simulate_task_processing,
+        args=(task.id, current_app._get_current_object())
+    ).start()
 
     return jsonify({"message": "Task created", "taskId": task.id})
 
@@ -112,3 +119,10 @@ def create_task():
 def get_tasks():
     tasks = Task.query.all()
     return jsonify([task.as_dict() for task in tasks])
+
+
+@main.route('/api/test-socket')
+def test_socket():
+    from app import socketio
+    socketio.emit('task_update', {'taskId': 999, 'status': 'testing'})
+    return jsonify({"message": "Emitted test update"})
