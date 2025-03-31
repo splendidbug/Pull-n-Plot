@@ -19,7 +19,7 @@ def create_app():
 
     with app.app_context():
         from app.models import Task, SalesRecord
-        # db.drop_all()    # This removes all tables (use only in development!)
+        db.drop_all()    # This removes all tables (use only in development!)
         db.create_all()  # This recreates the tables with the updated schema
 
     from app.routes import main
@@ -29,4 +29,6 @@ def create_app():
         from app.models import Task, SalesRecord
         db.create_all()
 
+    from app.job_queue import start_worker
+    start_worker(app)
     return app
