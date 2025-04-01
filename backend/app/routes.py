@@ -6,6 +6,7 @@ from app.models import Task
 import json
 import threading
 from app.job_queue import enqueue_task
+from app.models import FilteredData
 
 main = Blueprint('main', __name__)
 
@@ -117,8 +118,18 @@ def get_tasks():
     return jsonify([task.as_dict() for task in tasks])
 
 
-@main.route('/api/test-socket')
-def test_socket():
-    from app import socketio
-    socketio.emit('task_update', {'taskId': 999, 'status': 'testing'})
-    return jsonify({"message": "Emitted test update"})
+@main.route('/api/filtered-records', methods=['GET'])
+def get_filtered_records():
+    records = FilteredData.query.all()
+
+    return jsonify([
+        {
+            "id": record.id,
+            "task_id": record.task_id,
+            "source": record.source,
+            "row_id": record.row_id,
+            "column_name": record.column_name,
+            "column_value": record.column_value
+        }
+        for record in records
+    ])

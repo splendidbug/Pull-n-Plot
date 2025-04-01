@@ -5,6 +5,8 @@ import threading
 import queue
 from app import db, socketio
 from app.models import Task
+from app.filter_database import apply_filters
+import json
 
 # Create a shared queue
 task_queue = queue.Queue()
@@ -26,10 +28,20 @@ def worker(app):
 
             # Simulate processing
             time.sleep(10)
-            task.status = "in progress"
+            task.status = "Fetching data"
             db.session.commit()
             socketio.emit("task_update", {
                           "taskId": task.id, "status": "in progress"})
+
+            time.sleep(10)
+            task.status = "Applying Pre-filters"
+            db.session.commit()
+            socketio.emit("task_update", {
+                          "taskId": task.id, "status": "in progress"})
+
+            data_sources = json.loads(task.data_sources)
+            task_filters = json.loads(task.filters or "[]")
+            filtered_df = apply_filters(task_id, data_sources, task_filters)
 
             time.sleep(10)
             task.status = "completed"

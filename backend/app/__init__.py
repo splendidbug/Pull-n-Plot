@@ -18,7 +18,7 @@ def create_app():
     socketio.init_app(app)
 
     with app.app_context():
-        from app.models import Task, SalesRecord
+        from app.models import Task
         db.drop_all()    # This removes all tables (use only in development!)
         db.create_all()  # This recreates the tables with the updated schema
 
@@ -26,7 +26,7 @@ def create_app():
     app.register_blueprint(main)
 
     with app.app_context():
-        from app.models import Task, SalesRecord
+        from app.models import Task
         db.create_all()
 
     from app.job_queue import start_worker

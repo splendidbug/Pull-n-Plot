@@ -58,8 +58,8 @@ function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fiel
                     <Box sx={{ mt: 1, mb: 2, px: 1 }}>
                       {isNumeric ? (
                         <Box sx={{ display: "flex", gap: 1 }}>
-                          <TextField label="From" type="number" size="small" value={""} onChange={(e) => onFieldFilterChange(index, col, "from", e.target.value)} />
-                          <TextField label="To" type="number" size="small" value={""} onChange={(e) => onFieldFilterChange(index, col, "to", e.target.value)} />
+                          <TextField label="From" type="number" size="small" value={ds.fieldFilters[col]?.from || ""} onChange={(e) => onFieldFilterChange(index, col, "from", e.target.value)} />
+                          <TextField label="To" type="number" size="small" value={ds.fieldFilters[col]?.to || ""} onChange={(e) => onFieldFilterChange(index, col, "to", e.target.value)} />
                         </Box>
                       ) : (
                         <TextField
