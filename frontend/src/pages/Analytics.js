@@ -10,6 +10,22 @@ const Analytics = () => {
   const [xFields, setxField] = useState("");
   const [yFields, setyField] = useState("");
 
+  const handleAxisChange = (chartId, axis, fieldName) => {
+    setCharts((prev) =>
+      prev.map((chart) => {
+        if (chart.id !== chartId) return chart;
+        return {
+          ...chart,
+          [axis]: fieldName,
+        };
+      })
+    );
+  };
+
+  const handleChartTypeChange = (chartId, newType) => {
+    setCharts((prev) => prev.map((chart) => (chart.id === chartId ? { ...chart, type: newType } : chart)));
+  };
+
   // Fetch column metadata (name & type)
   useEffect(() => {
     fetch("http://localhost:5000/api/task_fields")
@@ -33,6 +49,7 @@ const Analytics = () => {
             type: "line",
             xField: "year",
             yField: "price_in_euro",
+            isAutoChart: true,
           });
         }
 
@@ -49,6 +66,7 @@ const Analytics = () => {
             type: "bar",
             xField: "Manufacturer",
             yField: "Sales",
+            isAutoChart: true,
           });
         }
 
@@ -148,14 +166,7 @@ const Analytics = () => {
 
       {/* Render each chart */}
       {charts.map((chart) => (
-        <ChartCard
-          key={chart.id}
-          chart={chart}
-          columns={columns}
-          onFieldToggle={handleFieldToggle}
-          onFilterChange={handleFilterChange}
-          onRemove={handleRemoveChart} // Pass the remove handler
-        />
+        <ChartCard key={chart.id} chart={chart} columns={columns} onFieldToggle={handleFieldToggle} onFilterChange={handleFilterChange} onRemove={handleRemoveChart} onAxisChange={handleAxisChange} onChartTypeChange={handleChartTypeChange} />
       ))}
 
       {/* Add Chart Button */}
