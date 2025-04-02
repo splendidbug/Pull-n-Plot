@@ -9,7 +9,7 @@ import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import "./components/Sidebar.css";
 
 function App() {
-  const [mode, setMode] = useState("light");
+  const [mode, setMode] = useState("dark");
 
   const theme = useMemo(() => {
     return createTheme({

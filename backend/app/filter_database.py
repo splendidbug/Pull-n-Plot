@@ -3,7 +3,8 @@ import pandas as pd
 from flask import current_app
 from rapidfuzz import fuzz
 from app import db
-from app.models import FilteredData
+from app.models import CombinedFilteredData
+import pandas.api.types as ptypes
 
 
 def fuzzy_match(row_value, queries, threshold=80):
@@ -11,20 +12,39 @@ def fuzzy_match(row_value, queries, threshold=80):
     return any(fuzz.ratio(row_value_lower, q) >= threshold for q in queries)
 
 
-def add_filtered_data_to_db(task_id, all_filtered_data):
-    for source_name, filtered_df in all_filtered_data.items():
-        for row_number, row in filtered_df.iterrows():
-            for col_name, value in row.items():
-                record = FilteredData(
-                    task_id=task_id,
-                    source=source_name,
-                    row_id=row_number,
-                    column_name=col_name,
-                    column_value=value
-                )
-                db.session.add(record)
+def add_merged_data_to_db(task_id, merged_df):
+    col_type_dict = {
+        col: ptypes.is_categorical_dtype(
+            merged_df[col]) or ptypes.is_object_dtype(merged_df[col])
+        for col in merged_df.columns
+    }
+    for row_number, row in merged_df.iterrows():
+        for col_name, value in row.items():
+            record = CombinedFilteredData(
+                task_id=task_id,
+                row_id=row_number,
+                is_categorical=col_type_dict[col_name],
+                column_name=col_name,
+                column_value=value
+            )
+            db.session.add(record)
 
     db.session.commit()
+
+
+def join_dfs(all_filtered_data):
+    common_cols = set.intersection(*(set(df.columns)
+                                   for df in all_filtered_data.values()))
+    common_cols = list(common_cols)
+
+    # Perform full outer join sequentially
+    from functools import reduce
+
+    merged_df = reduce(
+        lambda left, right: pd.merge(left, right, on=common_cols, how='outer'),
+        all_filtered_data.values()
+    )
+    return merged_df
 
 
 def apply_filters(task_id, data_sources, task_filters):
@@ -81,5 +101,9 @@ def apply_filters(task_id, data_sources, task_filters):
 
     print(df)
     print(all_filtered_data)
-    add_filtered_data_to_db(task_id, all_filtered_data)
+    merged_df = join_dfs(all_filtered_data)
+    print("merged data")
+    print(merged_df)
+    add_merged_data_to_db(task_id, merged_df)
+    print("added to db")
     return all_filtered_data

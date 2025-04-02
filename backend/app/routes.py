@@ -6,7 +6,7 @@ from app.models import Task
 import json
 import threading
 from app.job_queue import enqueue_task
-from app.models import FilteredData
+from app.models import CombinedFilteredData
 
 main = Blueprint('main', __name__)
 
@@ -120,16 +120,33 @@ def get_tasks():
 
 @main.route('/api/filtered-records', methods=['GET'])
 def get_filtered_records():
-    records = FilteredData.query.all()
+    records = CombinedFilteredData.query.all()
 
     return jsonify([
         {
             "id": record.id,
             "task_id": record.task_id,
-            "source": record.source,
             "row_id": record.row_id,
+            "is_categorical": record.is_categorical,
             "column_name": record.column_name,
             "column_value": record.column_value
         }
         for record in records
     ])
+
+
+@main.route('/api/task_fields', methods=['GET'])
+def get_task_column_names():
+    results = (
+        db.session.query(
+            CombinedFilteredData.column_name,
+            CombinedFilteredData.is_categorical
+        )
+        .distinct(CombinedFilteredData.column_name)
+        .all()
+    )
+    columns = [
+        {"name": name, "type": "categorical" if is_cat else "numeric"}
+        for name, is_cat in results
+    ]
+    return jsonify(columns)

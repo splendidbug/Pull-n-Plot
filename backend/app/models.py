@@ -34,10 +34,10 @@ id, task_id, source, row_id, column_name, column_value
 """
 
 
-class FilteredData(db.Model):
+class CombinedFilteredData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
-    source = db.Column(db.String(100), nullable=False)
     row_id = db.Column(db.Integer, nullable=False)
+    is_categorical = db.Column(db.Boolean, nullable=False)
     column_name = db.Column(db.String(100), nullable=False)
-    column_value = db.Column(db.String(100), nullable=False)
+    column_value = db.Column(db.String(100))
