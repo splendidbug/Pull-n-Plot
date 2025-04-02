@@ -7,6 +7,7 @@ import json
 import threading
 from app.job_queue import enqueue_task
 from app.models import CombinedFilteredData
+from app.filter_database import filter_records
 
 main = Blueprint('main', __name__)
 
@@ -150,3 +151,19 @@ def get_task_column_names():
         for name, is_cat in results
     ]
     return jsonify(columns)
+
+
+@main.route("/api/filtered-values", methods=["POST"])
+def get_filtered_values():
+    data = request.get_json()
+    selected_fields = data.get("fields", [])  # ["col1", "col2"]
+    filters = data.get("filters", {})         # {col1: {from/to/values}}
+
+    print(selected_fields)
+    print(filters)
+    print("-----------------------")
+
+    df = filter_records(selected_fields, filters)
+    # print(df)
+    result = df.dropna().to_dict(orient="records")
+    return jsonify(result)

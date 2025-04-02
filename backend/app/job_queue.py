@@ -5,7 +5,7 @@ import threading
 import queue
 from app import db, socketio
 from app.models import Task
-from app.filter_database import apply_filters
+from app.filter_database import apply_filters_and_merge
 import json
 
 # Create a shared queue
@@ -41,7 +41,7 @@ def worker(app):
 
             data_sources = json.loads(task.data_sources)
             task_filters = json.loads(task.filters or "[]")
-            filtered_df = apply_filters(task_id, data_sources, task_filters)
+            apply_filters_and_merge(task_id, data_sources, task_filters)
 
             # time.sleep(10)
             task.status = "completed"

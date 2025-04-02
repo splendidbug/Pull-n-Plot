@@ -26,11 +26,11 @@ class Task(db.Model):
 
 
 """
-id, task_id, source, row_id, column_name, column_value
-1,   1,     car1.csv,  1,       make,            bmw
-2,   1,     car1.csv,  1,       sales,           2000
-3,   1,     car1.csv,  2,       make,            audi
-3,   1,     car1.csv,  2,       sales,           3000
+id, task_id, row_id, column_name, column_value
+1,   1,       1,       make,            bmw
+2,   1,       1,       sales,           2000
+3,   1,       2,       make,            audi
+3,   1,       2,       sales,           3000
 """
 
 

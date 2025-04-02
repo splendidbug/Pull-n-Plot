@@ -5,6 +5,7 @@ from rapidfuzz import fuzz
 from app import db
 from app.models import CombinedFilteredData
 import pandas.api.types as ptypes
+from sqlalchemy import and_, or_
 
 
 def fuzzy_match(row_value, queries, threshold=80):
@@ -47,7 +48,7 @@ def join_dfs(all_filtered_data):
     return merged_df
 
 
-def apply_filters(task_id, data_sources, task_filters):
+def apply_filters_and_merge(task_id, data_sources, task_filters):
     data_dir = os.path.join(current_app.root_path, '..', 'sample_data')
 
     all_filtered_data = {}
@@ -106,4 +107,41 @@ def apply_filters(task_id, data_sources, task_filters):
     print(merged_df)
     add_merged_data_to_db(task_id, merged_df)
     print("added to db")
-    return all_filtered_data
+
+
+def filter_records(selected_fields, filters):
+    query = CombinedFilteredData.query.filter(
+        CombinedFilteredData.column_name.in_(selected_fields)
+    )
+    rows = query.all()
+
+    df = pd.DataFrame([{
+        "row_id": row.row_id,
+        "column_name": row.column_name,
+        "column_value": row.column_value
+    } for row in rows])
+    df = df.pivot(index="row_id", columns="column_name",
+                  values="column_value").reset_index()
+
+    for col, condition in filters.items():
+        if col not in df.columns:
+            continue
+
+        # Numeric filtering
+        if "from" in condition or "to" in condition:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+            if "from" in condition:
+                df = df[df[col] >= float(condition["from"])]
+            if "to" in condition:
+                df = df[df[col] <= float(condition["to"])]
+
+        # Fuzzy categorical filtering
+        elif "values" in condition and condition["values"]:
+            df = df[
+                df[col].apply(lambda val: fuzzy_match(
+                    str(val), condition["values"]))
+            ]
+
+    df = df.drop('row_id', axis=1)
+    df.drop_duplicates(inplace=True)
+    return df
