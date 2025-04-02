@@ -107,18 +107,6 @@ const Analytics = () => {
         let updatedType = chart.type;
         const fieldsSet = new Set(updatedFields);
 
-        // let xField = null;
-        // let yField = null;
-
-        // if (fieldsSet.has("year") && fieldsSet.has("price_in_euro")) {
-        //   updatedType = "line";
-        //   xField = "year";
-        //   yField = "price_in_euro";
-        //   console.log("yes, year and euro");
-        // } else if (fieldsSet.has("price_in_euro") && fieldsSet.has("Manufacturer")) {
-        //   updatedType = "bar";
-        // }
-
         // Handle filters
         const updatedFilters = { ...chart.fieldFilters };
         if (selected) {

@@ -167,3 +167,10 @@ def get_filtered_values():
     # print(df)
     result = df.dropna().to_dict(orient="records")
     return jsonify(result)
+
+
+@main.route("/api/tasks/completed", methods=["GET"])
+def get_completed_tasks():
+    tasks = Task.query.filter_by(status="completed").order_by(
+        Task.created_at.desc()).all()
+    return jsonify([task.as_dict() for task in tasks])

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Box, Chip, Paper, TextField, IconButton, Select, MenuItem, FormControl, InputLabel, Typography } from "@mui/material";
 import { LineChart } from "../utils/charts/LineChart";
 import { BarChart } from "../utils/charts/BarChart";
+import { PieChart } from "../utils/charts/PieChart";
 import CloseIcon from "@mui/icons-material/Close";
 
 const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, onAxisChange, onChartTypeChange }) => {
@@ -15,10 +16,12 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
           LineChart(svgRef, chartData, chart.xField, chart.yField);
         } else if (chart.type === "bar") {
           BarChart(svgRef, chartData, chart.xField, chart.yField);
+        } else if (chart.type === "pie" && chart.xField) {
+          PieChart(svgRef, chartData, chart.xField);
         }
       }
     }
-  }, [chartData, chart.xField, chart.yField, chart.selectedFields]);
+  }, [chartData, chart.xField, chart.yField, chart.selectedFields, chart.type]);
 
   useEffect(() => {
     if (chart.selectedFields.length === 0) return;
