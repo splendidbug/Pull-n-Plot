@@ -2,10 +2,35 @@
 import React from "react";
 import { Box, Chip, TextField, Typography } from "@mui/material";
 
+/**
+ * FieldCard component is used to display a field in a chart configuration
+ * toggles the selection of a field, apply filters to it,
+ * assigns it as the X or Y axis in a chart. The field can be numeric or categorical
+ *
+ * @component
+ * @example
+ * <FieldCard
+ *   col={column}
+ *   isSelected={isSelected}
+ *   filters={filters}
+ *   onToggle={handleFieldToggle}
+ *   onFilterChange={handleFilterChange}
+ *   xField={xField}
+ *   yField={yField}
+ *   onAxisChange={handleAxisChange}
+ *   chartType={chartType}
+ * />
+ */
 const FieldCard = ({ col, isSelected, filters, onToggle, onFilterChange, xField, yField, onAxisChange, chartType }) => {
   const isX = xField === col.name;
   const isY = yField === col.name;
 
+  /**
+   * Handles the checkbox click to toggle the axis (X or Y)
+   *
+   * @param {string} axis - The axis to toggle ("xField" or "yField")
+   * @returns {void}
+   */
   const handleCheckbox = (axis) => () => {
     onAxisChange(axis, isX || isY ? null : col.name);
   };

@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Sidebar.css";
 
+/**
+ * Sidebar component to  navigation links
+ * has links to create tasks, view task status, and access analytics
+ * The sidebar can be opened or closed
+ *
+ * @component
+ * @example
+ * <Sidebar mode="dark" />
+ */
 const Sidebar = ({ mode }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 

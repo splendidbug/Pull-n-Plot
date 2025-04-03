@@ -9,11 +9,28 @@ from sqlalchemy import and_, or_
 
 
 def fuzzy_match(row_value, queries, threshold=80):
+    """
+    Fuzzy matches queries with rows. Return the matches if it's above the theeshold
+
+    # Arguments
+    - row_value: list of values from which query values will be compared against
+    - queries: list of queries entered by the user to match with actual values
+    - threshold: fuzzy match threshold  
+    """
+
     row_value_lower = row_value.lower()
     return any(fuzz.ratio(row_value_lower, q) >= threshold for q in queries)
 
 
 def add_merged_data_to_db(task_id, merged_df):
+    """
+    Add merged dataframe to CombinedFilteredData
+
+    # Arguments
+    - task_id: task id
+    - merged_df: pandas dataframe to add to database
+    """
+
     col_type_dict = {
         col: ptypes.is_categorical_dtype(
             merged_df[col]) or ptypes.is_object_dtype(merged_df[col])
@@ -34,6 +51,13 @@ def add_merged_data_to_db(task_id, merged_df):
 
 
 def join_dfs(all_filtered_data):
+    """
+    Perform full outer join on dataframes based on common columns. Returns merged dataframe 
+
+    # Arguments
+    - all_filtered_data: dictionary where key is soruce name value is the dataframe
+    """
+
     common_cols = set.intersection(*(set(df.columns)
                                    for df in all_filtered_data.values()))
     common_cols = list(common_cols)
@@ -49,6 +73,18 @@ def join_dfs(all_filtered_data):
 
 
 def apply_filters_and_merge(task_id, data_sources, task_filters):
+    """
+    Perform filter on every data source based on selected filters. Then, merge and add to db.
+    (optional) Filter categorical columns based on `values` in task_filters based on fuzzy matching
+    (optional) Filter numerical columns based on `from` and `to` in task_filters
+    Merge and add to database after optional filtering
+
+    # Arguments
+    - task_id: task id
+    - data_sources: dictionary of selected sources (`selectedSource`) and selected fields (`selectedFields`)
+    - task_filters: dictionary of column names, value/from-to filters
+    """
+
     data_dir = os.path.join(current_app.root_path, '..', 'sample_data')
 
     all_filtered_data = {}
@@ -105,10 +141,17 @@ def apply_filters_and_merge(task_id, data_sources, task_filters):
 
     merged_df = join_dfs(all_filtered_data)
     add_merged_data_to_db(task_id, merged_df)
-    print("added to db")
 
 
 def filter_records(selected_fields, filters):
+    """
+    Pivot based on `task_id` and `row_id`, perform filter and return a dataframe of filtered values
+
+    # Argument:
+    - selected_fields: list of fields to filter
+    - filters: value/from-to filters - value for categorical and form, to for numeric
+    """
+
     query = CombinedFilteredData.query.filter(
         CombinedFilteredData.column_name.in_(selected_fields)
     )

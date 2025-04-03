@@ -6,10 +6,29 @@ import { BarChart } from "../utils/charts/BarChart";
 import { PieChart } from "../utils/charts/PieChart";
 import FieldCard from "./FieldCard";
 
+/**
+ * Renders a chart with configurable fields, filters, chart type
+ * Provides the ability to toggle fields, apply filters, and switch chart types
+ *
+ * @component
+ * <ChartCard
+ *   chart={chart}
+ *   columns={columns}
+ *   onFieldToggle={handleFieldToggle}
+ *   onFilterChange={handleFilterChange}
+ *   onRemove={handleRemoveChart}
+ *   onAxisChange={handleAxisChange}
+ *   onChartTypeChange={handleChartTypeChange}
+ * />
+ */
 const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, onAxisChange, onChartTypeChange }) => {
   const svgRef = useRef();
   const [chartData, setChartData] = useState(null);
 
+  /**
+   * renders the chart when the chart data is updated
+   * runs whenever `chartData`, `chart.xField`, `chart.yField`, or `chart.type` changes
+   */
   useEffect(() => {
     if (chart.selectedFields.length > 0 && chartData) {
       if (chart.type === "line" && chart.xField && chart.yField) {
@@ -22,6 +41,10 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
     }
   }, [chartData, chart.xField, chart.yField, chart.selectedFields, chart.type]);
 
+  /**
+   * useEffect to fetch filtered data when fields or filters change
+   * data is fetched from the backend API and then used to update the `chartData` state
+   */
   useEffect(() => {
     if (chart.selectedFields.length === 0) return;
 
@@ -95,27 +118,26 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         <Box sx={{ flex: 1 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
 
         {/* Chart Type Dropdown */}
-        {!chart.isAutoChart && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              minWidth: 180,
-              pl: 3,
-            }}
-          >
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Chart Type</InputLabel>
-              <Select value={chart.type} label="Chart Type" onChange={(e) => onChartTypeChange(chart.id, e.target.value)}>
-                <MenuItem value="line">Line</MenuItem>
-                <MenuItem value="bar">Bar</MenuItem>
-                <MenuItem value="pie">Pie</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        )}
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            minWidth: 180,
+            pl: 3,
+          }}
+        >
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Chart Type</InputLabel>
+            <Select value={chart.type} label="Chart Type" onChange={(e) => onChartTypeChange(chart.id, e.target.value)}>
+              <MenuItem value="line">Line</MenuItem>
+              <MenuItem value="bar">Bar</MenuItem>
+              <MenuItem value="pie">Pie</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
       </Box>
     </Paper>
   );

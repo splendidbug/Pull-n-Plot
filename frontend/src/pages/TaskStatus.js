@@ -10,7 +10,17 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 
+/**
+ * responsible for displaying a list of tasks and their statuses.
+ * fetches tasks from an API, listens for real-time updates via WebSocket,
+ * displays detailed information about each task, including data sources and selected fields.
+ *
+ * @component
+ * @example
+ * <TaskStatus />
+ */
 function TaskStatus() {
+  // stores tasks fetched from the api
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
@@ -21,6 +31,7 @@ function TaskStatus() {
   }, []);
 
   useEffect(() => {
+    // Establish WebSocket connection to listen for task updates
     const socket = io("http://localhost:5000");
 
     socket.on("connect", () => {
@@ -36,6 +47,12 @@ function TaskStatus() {
     };
   }, []);
 
+  /**
+   * renders icons based on the task status.
+   *
+   * @param {string} status - status of the task (e.g., "pending", "Fetching data", etc.).
+   * @returns {JSX.Element} - icon for the task status.
+   */
   const renderStatusIcon = (status) => {
     const animatedStyle = {
       display: "inline-block",
@@ -145,7 +162,7 @@ function TaskStatus() {
                       position: "absolute",
                       top: -10,
                       left: "50%",
-                      transform: "translateX(-50%)",
+                      transform: "translateX(-125%)",
                       backgroundColor: "#1a1a2e",
                       px: 1,
                       color: "#80bfff",

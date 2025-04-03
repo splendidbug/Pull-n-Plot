@@ -8,10 +8,18 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import DataSourceCard from "../components/DataSourceCard";
 
+/**
+ * Alert component used to display success toasts
+ */
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
+/**
+ * CreateTask component sets up a task by selecting data sources and filters
+ * Can add multiple data sources and select relevant fields
+ *
+ */
 function CreateTask() {
   const [availableSources, setAvailableSources] = useState([]);
   useEffect(() => {
@@ -28,6 +36,11 @@ function CreateTask() {
   const [taskName, setTaskName] = useState("");
   const [dataSources, setDataSources] = useState([]);
 
+  /**
+   * Adds an empty data source to the dataSources array
+   *
+   * @returns {void}
+   */
   const handleAddSource = () => {
     setDataSources([
       ...dataSources,
@@ -41,6 +54,13 @@ function CreateTask() {
   };
   const [fieldMeta, setFieldMeta] = useState({});
 
+  /**
+   * Updates the selected source for a specific data source and resets its field-related state
+   *
+   * @param {number} index - The index of the data source to update
+   * @param {string} sourceName - The name of the selected data source
+   * @returns {void}
+   */
   const handleSourceChange = (index, sourceName) => {
     const updated = [...dataSources];
     updated[index].selectedSource = sourceName;
@@ -64,6 +84,13 @@ function CreateTask() {
     }
   };
 
+  /**
+   * Toggles the selection of a field for a given data source
+   *
+   * @param {number} index - The index of the data source
+   * @param {string} field - The name of the field to toggle
+   * @returns {void}
+   */
   const handleFieldToggle = (index, field) => {
     const updated = [...dataSources];
     const ds = updated[index];
@@ -83,6 +110,12 @@ function CreateTask() {
     setDataSources(updated);
   };
 
+  /**
+   * Removes a data source from the dataSources array
+   *
+   * @param {number} index - The index of the data source to remove
+   * @returns {void}
+   */
   const handleRemoveSource = (index) => {
     const updated = [...dataSources];
     updated.splice(index, 1);
@@ -93,6 +126,11 @@ function CreateTask() {
 
   const [toastOpen, setToastOpen] = useState(false);
 
+  /**
+   * Submits the task with the selected data sources and field filters
+   *
+   * @returns {void}
+   */
   const handleSubmitTask = () => {
     const payload = {
       taskName,
@@ -123,7 +161,7 @@ function CreateTask() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: "auto", mt: 5, px: 3 }}>
+    <Box sx={{ p: 4 }}>
       <Typography variant="h5" gutterBottom>
         Task Setup
       </Typography>

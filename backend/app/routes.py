@@ -12,25 +12,25 @@ from app.filter_database import filter_records
 main = Blueprint('main', __name__)
 
 
-"""
-resp: 
-[
-  {
-    "name": "cars.csv",
-    "columns": [
-      {"name": "Manufacturer", "type": "categorical"},
-      {"name": "year", "type": "numeric"},
-      {"name": "price_in_euro", "type": "numeric"}
-    ]
-  },
-  ...
-]
-
-"""
-
-
 @main.route('/api/data-sources', methods=['GET'])
 def get_data_sources():
+    """
+    returns data source names, metada (column names, type: numerical/categorical) 
+
+    response: 
+    [
+    {
+        "name": "cars.csv",
+        "columns": [
+        {"name": "Manufacturer", "type": "categorical"},
+        {"name": "year", "type": "numeric"},
+        {"name": "price_in_euro", "type": "numeric"}
+        ]
+    },
+    ...
+    ]
+    """
+
     data_dir = os.path.join(current_app.root_path, '..', 'sample_data')
     sources = []
 
@@ -74,6 +74,40 @@ def get_data_sources():
 
 @main.route('/api/tasks', methods=['POST'])
 def create_task():
+    """
+    Add a task to the database - task name, data sources, filters get added to Task table
+
+    # Arguments    
+    - taskName: Name of the task
+    - dataSources:  list of data sources with filters and selected fields
+    - selectedSource: Name of the data source file.
+    - selectedFields: Fields to include in processing
+    - fieldFilters: Optional filters to apply per field
+    - values: list of values to match
+    - from, to: range filters for numeric/date fields.
+
+    Sample input:
+    taskName: Name of the task
+    "dataSources": [
+            {
+                "selectedSource": "car_sales1.json",
+                "selectedFields": ["Manufacturer", "Model", "year"],
+                "fieldFilters": {
+                    "Manufacturer": {
+                        "values": ["bmw"]
+                    },
+                    "Model": {
+                        "values": []
+                    },
+                    "year": {
+                        "from": "2010",
+                        "to": "2023"
+                    }
+                }
+            }
+        ]
+    """
+
     def extract_filters(data_sources):
         filters = []
         for ds in data_sources:
@@ -122,29 +156,23 @@ def create_task():
 
 @main.route('/api/tasks', methods=['GET'])
 def get_tasks():
+    """
+    Return tasks from Task table
+    """
+
     tasks = Task.query.all()
     return jsonify([task.as_dict() for task in tasks])
 
 
-@main.route('/api/filtered-records', methods=['GET'])
-def get_filtered_records():
-    records = CombinedFilteredData.query.all()
-
-    return jsonify([
-        {
-            "id": record.id,
-            "task_id": record.task_id,
-            "row_id": record.row_id,
-            "is_categorical": record.is_categorical,
-            "column_name": record.column_name,
-            "column_value": record.column_value
-        }
-        for record in records
-    ])
-
-
 @main.route('/api/task_fields', methods=['GET'])
 def get_task_column_names():
+    """
+    Return column names of merged data in task. Useful to let users select the fields to plot charts
+
+    # Arguments
+    - task_id: task_id of the task
+    """
+
     task_id = request.args.get("task_id", type=int)
     if not task_id:
         return jsonify({"error": "task_id is required"}), 400
@@ -168,6 +196,14 @@ def get_task_column_names():
 
 @main.route("/api/filtered-values", methods=["POST"])
 def get_filtered_values():
+    """
+    Return rows of specified fields after filtering
+
+    # Arguments
+    - fields: column names
+    - filters: optional - from, to for numeric; values(list) for categorical
+    """
+
     data = request.get_json()
     selected_fields = data.get("fields", [])  # ["col1", "col2"]
     filters = data.get("filters", {})         # {col1: {from/to/values}}
@@ -181,6 +217,10 @@ def get_filtered_values():
 
 @main.route("/api/tasks/completed", methods=["GET"])
 def get_completed_tasks():
-    tasks = Task.query.filter_by(status="completed").order_by(
+    """
+    Return completed tasks so users can choose which task to analyze
+    """
+
+    tasks = Task.query.filter_by(status="Completed").order_by(
         Task.created_at.desc()).all()
     return jsonify([task.as_dict() for task in tasks])

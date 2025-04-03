@@ -13,6 +13,11 @@ task_queue = queue.Queue()
 
 
 def worker(app):
+    """
+    Perform operations on task id by picking the first `task_id` from the queue
+    Send task status web hook updates to frontend 
+    """
+
     with app.app_context():
         while True:
             task_id = task_queue.get()
@@ -53,12 +58,22 @@ def worker(app):
             task_queue.task_done()
 
 
-# Function to enqueue a task
 def enqueue_task(task_id):
+    """
+    Put a task in the queue
+
+    # Arguments
+    - task_id: task id
+    """
     task_queue.put(task_id)
 
 
-# Start the worker thread once, at startup
 def start_worker(app):
+    """
+    Start a worker thread upon app startup
+
+    # Arguments
+    - app: current app instance
+    """
     thread = threading.Thread(target=worker, args=(app,), daemon=True)
     thread.start()

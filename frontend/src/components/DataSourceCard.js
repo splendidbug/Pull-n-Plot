@@ -2,6 +2,22 @@ import React from "react";
 import { Box, Typography, IconButton, Paper, FormControl, InputLabel, Select, MenuItem, Chip, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
+/**
+ * DataSourceCard component selects a data source, view available fields, and set filters for those fields
+ *
+ * @component
+ * @example
+ * <DataSourceCard
+ *   index={0}
+ *   ds={dataSource}
+ *   availableSources={availableSources}
+ *   fieldMeta={fieldMeta}
+ *   onRemove={handleRemoveSource}
+ *   onSourceChange={handleSourceChange}
+ *   onFieldToggle={handleFieldToggle}
+ *   onFieldFilterChange={handleFieldFilterChange}
+ * />
+ */
 function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fieldMeta, onRemove, onSourceChange, onFieldToggle, onFieldFilterChange }) {
   const sourceOptions = availableSources.filter((src) => !selectedSourceNames.includes(src.name) || ds.selectedSource === src.name);
   const selectedSource = availableSources.find((src) => src.name === ds.selectedSource);

@@ -11,6 +11,9 @@ import "./components/Sidebar.css";
 function App() {
   const [mode, setMode] = useState("dark");
 
+  /**
+   * Handles the theme of the app. `theme` is created using the `createTheme` function from MUI
+   */
   const theme = useMemo(() => {
     return createTheme({
       palette: {
@@ -40,6 +43,11 @@ function App() {
     });
   }, [mode]);
 
+  /**
+   * The `toggleTheme` function toggles between 'dark' and 'light' modes.
+   *
+   * @returns {void}
+   */
   const toggleTheme = () => {
     setMode((prev) => (prev === "light" ? "dark" : "light"));
   };
@@ -48,7 +56,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <div style={{ display: "flex", minHeight: "100vh" }}>
+        <div style={{ marginLeft: "250px", display: "flex", minHeight: "100vh", height: "100%" }}>
           <Sidebar mode={mode} />
 
           <div style={{ marginLeft: "10px", padding: "5px", width: "100%" }}>

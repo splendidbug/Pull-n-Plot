@@ -4,6 +4,13 @@ import ChartCard from "../components/ChartCard";
 
 let chartIdCounter = 1;
 
+/**
+ * Analytics component for displaying the analytics dashboard
+ * Selects a task, create charts based on task data, visualize relationships between task fields using different chart types.
+ *
+ * @component
+ * <Analytics />
+ */
 const Analytics = () => {
   const [columns, setColumns] = useState([]); // [{ name, type }]
   const [charts, setCharts] = useState([]);
@@ -20,6 +27,16 @@ const Analytics = () => {
       .catch((err) => console.error("Error loading tasks:", err));
   }, []);
 
+  /**
+   * Handles changes to the chart's axis (either x or y)
+   * Updates the chart's xField or yField accordingly
+   *
+   * @param {number} chartId - chart id
+   * @param {string} axis - the axis to update ("xField"/"yField")
+   * @param {string} fieldName - field name to set on the axis
+   *
+   * @returns {void}
+   */
   const handleAxisChange = (chartId, axis, fieldName) => {
     setCharts((prev) =>
       prev.map((chart) => {
@@ -32,11 +49,21 @@ const Analytics = () => {
     );
   };
 
+  /**
+   * Handles changes to the chart type (e.g., line, bar)
+   *
+   * @param {number} chartId - chart id
+   * @param {string} newType - The new chart type (e.g., "line", "bar")
+   *
+   * @returns {void}
+   */
   const handleChartTypeChange = (chartId, newType) => {
     setCharts((prev) => prev.map((chart) => (chart.id === chartId ? { ...chart, type: newType } : chart)));
   };
 
-  // Fetch column metadata (name & type)
+  /**
+   * Fetch column metadata (name & type)
+   */
   useEffect(() => {
     if (!selectedTaskId) return;
 
@@ -89,7 +116,11 @@ const Analytics = () => {
       .catch((err) => console.error("Error fetching column names:", err));
   }, [selectedTaskId]);
 
-  // Add a new chart
+  /**
+   * Adds a new chart to the charts state
+   *
+   * @returns {void}
+   */
   const handleAddChart = () => {
     setCharts((prev) => [
       ...prev,
@@ -102,11 +133,23 @@ const Analytics = () => {
     ]);
   };
 
+  /**
+   * Removes a chart from the charts state based on its ID.
+   *
+   * @param {number} chartId - chart id to remove
+   * @returns {void}
+   */
   const handleRemoveChart = (chartId) => {
     setCharts((prevCharts) => prevCharts.filter((chart) => chart.id !== chartId));
   };
 
-  // Toggle chip selection
+  /**
+   * Toggles field selection for a specific chart
+   *
+   * @param {number} chartId - chart id to update
+   * @param {string} field - field to toggle
+   * @returns {void}
+   */
   const handleFieldToggle = (chartId, field) => {
     setCharts((prev) =>
       prev.map((chart) => {
@@ -138,7 +181,16 @@ const Analytics = () => {
     );
   };
 
-  // Update filters (range or categorical)
+  /**
+   * Handles changes to the filter for a field (numerical/categorical).
+   *
+   * @param {number} chartId - chart id to update
+   * @param {string} field - field whose filter is being updated
+   * @param {string} key - filter key ("from", "to"/ "values").
+   * @param {string|Array} value - new filter value
+   *
+   * @returns {void}
+   */
   const handleFilterChange = (chartId, field, key, value) => {
     setCharts((prev) =>
       prev.map((chart) => {
