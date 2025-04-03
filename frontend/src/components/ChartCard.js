@@ -115,7 +115,7 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         }}
       >
         {/* Chart SVG */}
-        <Box sx={{ flex: 1 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
+        <Box sx={{ flex: 1, pl: 5 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
 
         {/* Chart Type Dropdown */}
 

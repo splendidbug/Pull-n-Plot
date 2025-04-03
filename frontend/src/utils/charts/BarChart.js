@@ -4,8 +4,8 @@ export const BarChart = (svgRef, data, xField, yField) => {
   const svg = d3.select(svgRef.current);
   svg.selectAll("*").remove();
 
-  const width = 600;
-  const height = 300;
+  const width = 950;
+  const height = 500;
   const margin = { top: 20, right: 30, bottom: 80, left: 80 };
 
   svg.attr("width", width).attr("height", height);

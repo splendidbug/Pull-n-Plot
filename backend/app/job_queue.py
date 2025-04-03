@@ -38,7 +38,7 @@ def worker(app):
             socketio.emit("task_update", {
                           "taskId": task.id, "status": "Fetching data"})
 
-            time.sleep(10)
+            time.sleep(5)
             task.status = "Merging data"
             db.session.commit()
             socketio.emit("task_update", {

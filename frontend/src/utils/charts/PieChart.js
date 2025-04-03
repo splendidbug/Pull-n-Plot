@@ -4,8 +4,8 @@ export const PieChart = (svgRef, data, xField, yField = null) => {
   const svg = d3.select(svgRef.current);
   svg.selectAll("*").remove();
 
-  const width = 600;
-  const height = 500;
+  const width = 800;
+  const height = 600;
   const radius = Math.min(width, height) / 2 - 40;
 
   svg.attr("width", width).attr("height", height).attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMidYMid meet");

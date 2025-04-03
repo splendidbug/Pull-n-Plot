@@ -6,8 +6,8 @@ export const LineChart = (svgRef, data, xField, yField) => {
 
   console.log("in line chaert: ", data);
 
-  const width = 600;
-  const height = 300;
+  const width = 950;
+  const height = 500;
   const margin = { top: 20, right: 30, bottom: 70, left: 70 };
   svg.attr("width", width).attr("height", height);
 
