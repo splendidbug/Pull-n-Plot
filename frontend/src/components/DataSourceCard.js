@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, IconButton, Paper, FormControl, InputLabel, Select, MenuItem, Chip, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { Checkbox, FormControlLabel } from "@mui/material";
 
 /**
  * DataSourceCard component selects a data source, view available fields, and set filters for those fields
@@ -44,6 +45,31 @@ function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fiel
           <Typography variant="subtitle2" sx={{ mb: 0.5, ml: 0.5, fontWeight: 500, color: "text.secondary" }}>
             Fields:
           </Typography>
+          <FormControlLabel
+            control={
+              <Checkbox
+                sx={{ p: 0.5, ml: 1 }}
+                checked={selectedSource.columns.every((col) => ds.selectedFields.includes(col.name))}
+                onChange={(e) => {
+                  const allSelected = e.target.checked;
+                  selectedSource.columns.forEach((col) => {
+                    const isSelected = ds.selectedFields.includes(col.name);
+                    if (allSelected && !isSelected) {
+                      onFieldToggle(index, col.name);
+                    } else if (!allSelected && isSelected) {
+                      onFieldToggle(index, col.name);
+                    }
+                  });
+                }}
+              />
+            }
+            label={
+              <Typography variant="body2" sx={{ fontSize: "0.875rem", ml: 0.5 }}>
+                Select All
+              </Typography>
+            }
+          />
+
           <Box
             sx={{
               display: "flex",

@@ -1,33 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Paper, IconButton, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { Box, Paper, IconButton, FormControl, InputLabel, MenuItem, Select, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { LineChart } from "../utils/charts/LineChart";
 import { BarChart } from "../utils/charts/BarChart";
 import { PieChart } from "../utils/charts/PieChart";
 import FieldCard from "./FieldCard";
 
-/**
- * Renders a chart with configurable fields, filters, chart type
- * Provides the ability to toggle fields, apply filters, and switch chart types
- *
- * @component
- * <ChartCard
- *   chart={chart}
- *   columns={columns}
- *   onFieldToggle={handleFieldToggle}
- *   onFilterChange={handleFilterChange}
- *   onRemove={handleRemoveChart}
- *   onAxisChange={handleAxisChange}
- *   onChartTypeChange={handleChartTypeChange}
- * />
- */
 const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, onAxisChange, onChartTypeChange }) => {
   const svgRef = useRef();
   const [chartData, setChartData] = useState(null);
 
   /**
-   * renders the chart when the chart data is updated
-   * runs whenever `chartData`, `chart.xField`, `chart.yField`, or `chart.type` changes
+   * Renders the chart whenever chart data or chart config changes
    */
   useEffect(() => {
     if (chart.selectedFields.length > 0 && chartData) {
@@ -42,8 +26,7 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
   }, [chartData, chart.xField, chart.yField, chart.selectedFields, chart.type]);
 
   /**
-   * useEffect to fetch filtered data when fields or filters change
-   * data is fetched from the backend API and then used to update the `chartData` state
+   * Fetch data from backend when fields/filters change
    */
   useEffect(() => {
     if (chart.selectedFields.length === 0) return;
@@ -68,7 +51,58 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [chart.selectedFields, chart.fieldFilters]);
+  }, [chart.selectedFields, chart.fieldFilters, chart.task_id]);
+
+  /**
+   * Downloads the current SVG as a PNG
+   */
+  const handleDownloadPNG = () => {
+    if (!svgRef.current) return;
+
+    const svgElement = svgRef.current;
+    // Make sure your SVG has an explicit width/height or we can derive it from getBoundingClientRect()
+    const { width, height } = svgElement.getBoundingClientRect();
+
+    // Serialize the SVG to a string
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svgElement);
+
+    // Add name spaces.
+    if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if (!source.match(/^<svg[^>]+"http:\/\/www\.w3\.org\/1999\/xlink"/)) {
+      source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    // Create a data URL from the SVG string
+    const svgDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+
+    // Create an <img> element to load the data URL
+    const img = new Image();
+    img.onload = () => {
+      // Create a temporary <canvas> to draw the image
+      const canvas = document.createElement("canvas");
+      canvas.width = width || 800; // fallback if bounding box is 0
+      canvas.height = height || 600; // fallback if bounding box is 0
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+
+      // Convert canvas to PNG data URL
+      const pngFile = canvas.toDataURL("image/png");
+
+      // Download link
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngFile;
+      downloadLink.download = "chart.png";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    };
+
+    img.src = svgDataUrl;
+  };
 
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 4, position: "relative" }}>
@@ -105,7 +139,7 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         })}
       </Box>
 
-      {/* Chart + Dropdown Row */}
+      {/* Chart + Controls Row */}
       <Box
         sx={{
           display: "flex",
@@ -115,20 +149,21 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         }}
       >
         {/* Chart SVG */}
-        <Box sx={{ flex: 1, pl: 5 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
+        <Box sx={{ flex: 1 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
 
-        {/* Chart Type Dropdown */}
-
+        {/* Right-side Controls */}
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
+            alignItems: "flex-start",
             justifyContent: "center",
             height: "100%",
-            minWidth: 180,
             pl: 3,
+            gap: 2,
           }}
         >
+          {/* Chart Type Dropdown */}
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Chart Type</InputLabel>
             <Select value={chart.type} label="Chart Type" onChange={(e) => onChartTypeChange(chart.id, e.target.value)}>
@@ -137,6 +172,11 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
               <MenuItem value="pie">Pie</MenuItem>
             </Select>
           </FormControl>
+
+          {/* Download PNG Button */}
+          <Button variant="contained" size="small" onClick={handleDownloadPNG}>
+            Download Chart
+          </Button>
         </Box>
       </Box>
     </Paper>
