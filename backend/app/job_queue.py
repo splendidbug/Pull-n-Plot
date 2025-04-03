@@ -27,27 +27,27 @@ def worker(app):
                 continue
 
             # Simulate processing
-            # time.sleep(10)
+            time.sleep(10)
             task.status = "Fetching data"
             db.session.commit()
             socketio.emit("task_update", {
-                          "taskId": task.id, "status": "in progress"})
+                          "taskId": task.id, "status": "Fetching data"})
 
-            # time.sleep(10)
-            task.status = "Applying Pre-filters"
+            time.sleep(10)
+            task.status = "Merging data"
             db.session.commit()
             socketio.emit("task_update", {
-                          "taskId": task.id, "status": "in progress"})
+                          "taskId": task.id, "status": "Merging data"})
 
             data_sources = json.loads(task.data_sources)
             task_filters = json.loads(task.filters or "[]")
             apply_filters_and_merge(task_id, data_sources, task_filters)
 
-            # time.sleep(10)
-            task.status = "completed"
+            time.sleep(10)
+            task.status = "Completed"
             db.session.commit()
             socketio.emit("task_update", {
-                          "taskId": task.id, "status": "completed"})
+                          "taskId": task.id, "status": "Completed"})
 
             print(f" Finished task ID: {task.id}")
             task_queue.task_done()

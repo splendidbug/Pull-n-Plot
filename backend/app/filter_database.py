@@ -148,11 +148,4 @@ def filter_records(selected_fields, filters):
 
     df = df.drop('row_id', axis=1)
     df.drop_duplicates(inplace=True)
-    # print("in filter_db")
-    # print(df)
-    # min_value = df['year'].min()
-    # max_value = df['year'].max()
-
-    # print("Min value:", min_value)
-    # print("Max value:", max_value)
     return df

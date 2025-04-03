@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from "@mui/material";
+import { Box, Typography, Paper, Divider } from "@mui/material";
 import io from "socket.io-client";
+import { ReactComponent as TaskIcon } from "../utils/Assets/task_icon.svg";
+import { ReactComponent as CalendarIcon } from "../utils/Assets/calendar_icon.svg";
+import { ReactComponent as DataSourceIcon } from "../utils/Assets/data-source.svg";
+
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
+import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 
 function TaskStatus() {
   const [tasks, setTasks] = useState([]);
+
   useEffect(() => {
     fetch("http://localhost:5000/api/tasks")
       .then((res) => res.json())
@@ -18,13 +27,8 @@ function TaskStatus() {
       console.log("Connected to WebSocket");
     });
 
-    socket.onAny((event, ...args) => {
-      console.log("🔍 Received event:", event, args);
-    });
-
     socket.on("task_update", (update) => {
-      console.log("Task update received:", update);
-      setTasks((prevTasks) => prevTasks.map((task) => (task.id === update.taskId ? { ...task, status: update.status } : task)));
+      setTasks((prev) => prev.map((task) => (task.id === update.taskId ? { ...task, status: update.status } : task)));
     });
 
     return () => {
@@ -32,75 +36,186 @@ function TaskStatus() {
     };
   }, []);
 
+  const renderStatusIcon = (status) => {
+    const animatedStyle = {
+      display: "inline-block",
+      animation: "spin 2s linear infinite",
+      "@keyframes spin": {
+        from: { transform: "rotate(0deg)" },
+        to: { transform: "rotate(360deg)" },
+      },
+    };
+
+    switch (status) {
+      case "pending":
+        return <HourglassEmptyIcon sx={{ color: "#ffc107" }} />;
+      case "Fetching data":
+        return (
+          <Box>
+            <CloudDownloadIcon sx={{ color: "#2196f3", mt: 0.5 }} />
+          </Box>
+        );
+      case "Merging data":
+        return (
+          <Box>
+            <AutoAwesomeMotionIcon sx={{ color: "#00bcd4", mt: 0.5 }} />
+          </Box>
+        );
+      case "Completed":
+        return <CheckCircleIcon sx={{ color: "#4caf50" }} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, px: 3 }}>
+    <Box sx={{ maxWidth: 1000, mx: "auto", mt: 5, px: 2 }}>
       <Typography variant="h5" gutterBottom>
         Task Status
       </Typography>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Task Name</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Data Sources</TableCell>
-              <TableCell>Created At</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {tasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell>{task.name}</TableCell>
-                <TableCell>{task.status}</TableCell>
-                <TableCell>
-                  {task.data_sources.map((ds, idx) => (
-                    <Box key={idx} sx={{ mb: 1, p: 1 }}>
-                      <Typography variant="subtitle2">Data Source: {ds.selectedSource}</Typography>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        {tasks.map((task) => (
+          <Paper
+            key={task.id}
+            elevation={3}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: "#1a1a2e",
+              color: "#e0e0e0",
+            }}
+          >
+            {/* Header */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 2,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <TaskIcon style={{ width: 20, height: 20 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  {task.name}
+                </Typography>
+              </Box>
 
-                      {/* Selected Fields */}
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        Selected Fields:
-                      </Typography>
-                      <ul style={{ margin: 0, paddingLeft: 16 }}>
-                        {ds.selectedFields.map((field) => (
-                          <li key={field}>{field}</li>
-                        ))}
-                      </ul>
+              {/* Status */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {renderStatusIcon(task.status)}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 500,
+                    color: task.status === "Completed" ? "#4caf50" : task.status === "pending" ? "#ffc107" : "lightblue",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {task.status}
+                </Typography>
+              </Box>
 
-                      {/* Field Filters */}
-                      {Object.keys(ds.fieldFilters || {}).length > 0 && (
-                        <>
-                          <Typography variant="body2" sx={{ fontWeight: 500, mt: 1 }}>
-                            Filters:
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CalendarIcon style={{ width: 20, height: 20 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  {new Date(task.created_at).toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Divider sx={{ mb: 2, backgroundColor: "#444" }} />
+
+            {/* Data Sources */}
+            {task.data_sources.map((ds, idx) => (
+              <Box key={idx} sx={{ mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <DataSourceIcon style={{ width: 20, height: 20 }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                    {ds.selectedSource}
+                  </Typography>
+                </Box>
+
+                {/* Field Cards */}
+                <Box sx={{ position: "relative", mt: 2, mb: 3 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      position: "absolute",
+                      top: -10,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      backgroundColor: "#1a1a2e",
+                      px: 1,
+                      color: "#80bfff",
+                      fontSize: "12px",
+                    }}
+                  >
+                    Selected Fields
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      border: "1px solid #80bfff",
+                      borderRadius: 2,
+                      p: 2,
+                      pt: 3,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 2,
+                    }}
+                  >
+                    {ds.selectedFields.map((fieldName) => {
+                      const filter = ds.fieldFilters?.[fieldName];
+                      const hasRange = filter?.from || filter?.to;
+                      const hasValues = Array.isArray(filter?.values) && filter.values.length > 0;
+
+                      return (
+                        <Box
+                          key={fieldName}
+                          sx={{
+                            backgroundColor: "#1a1a2e",
+                            border: "1px solid #2196f3",
+                            borderRadius: 2,
+                            px: 2,
+                            py: 1.5,
+                            minWidth: 180,
+                            maxWidth: 220,
+                            color: "#fff",
+                            fontSize: "14px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: "14px",
+                              color: "#fff",
+                            }}
+                          >
+                            {fieldName}
                           </Typography>
-                          <ul style={{ margin: 0, paddingLeft: 16 }}>
-                            {Object.entries(ds.fieldFilters).map(([field, filter]) => {
-                              // Check if filter has meaningful values
-                              const hasRange = filter.from !== undefined && filter.to !== undefined && (filter.from || filter.to);
-                              const hasValues = Array.isArray(filter.values) && filter.values.length > 0;
 
-                              if (!hasRange && !hasValues) return null; // skip empty filters
+                          {hasRange && (
+                            <Typography sx={{ fontSize: "13px", color: "#ccc" }}>
+                              From: {filter.from || "-"} To: {filter.to || "-"}
+                            </Typography>
+                          )}
 
-                              return (
-                                <li key={field}>
-                                  {field}: {hasRange ? `From ${filter.from} to ${filter.to}` : hasValues ? filter.values.join(", ") : "-"}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </>
-                      )}
-                    </Box>
-                  ))}
-                </TableCell>
-
-                <TableCell>{new Date(task.created_at).toLocaleString()}</TableCell>
-              </TableRow>
+                          {hasValues && <Typography sx={{ fontSize: "13px", color: "#ccc" }}>Values: {filter.values.join(", ")}</Typography>}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </Box>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </Paper>
+        ))}
+      </Box>
     </Box>
   );
 }

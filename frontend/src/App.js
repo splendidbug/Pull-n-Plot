@@ -48,7 +48,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", minHeight: "100vh" }}>
           <Sidebar mode={mode} />
 
           <div style={{ marginLeft: "10px", padding: "5px", width: "100%" }}>

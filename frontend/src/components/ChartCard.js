@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Chip, Paper, TextField, IconButton, Select, MenuItem, FormControl, InputLabel, Typography } from "@mui/material";
+import { Box, Paper, IconButton, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { LineChart } from "../utils/charts/LineChart";
 import { BarChart } from "../utils/charts/BarChart";
 import { PieChart } from "../utils/charts/PieChart";
-import CloseIcon from "@mui/icons-material/Close";
+import FieldCard from "./FieldCard";
 
 const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, onAxisChange, onChartTypeChange }) => {
   const svgRef = useRef();
@@ -33,13 +34,12 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         body: JSON.stringify({
           fields: chart.selectedFields,
           filters: chart.fieldFilters,
-          task_id: chart.task_id, // pass correct task ID
+          task_id: chart.task_id,
         }),
       })
         .then((res) => res.json())
         .then((data) => {
           setChartData(data);
-          console.log("ChartCard: ", data);
         })
         .catch((err) => console.error("Failed to fetch filtered values:", err));
     }, 1000);
@@ -47,17 +47,9 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
     return () => clearTimeout(timeoutId);
   }, [chart.selectedFields, chart.fieldFilters]);
 
-  const handleAxisSelection = (axis, fieldName) => {
-    if (chart[axis] === fieldName) {
-      onAxisChange(chart.id, axis, null);
-    } else {
-      onAxisChange(chart.id, axis, fieldName);
-    }
-  };
-
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 4, position: "relative" }}>
-      {/* Close icon */}
+      {/* Close Icon */}
       <IconButton
         size="small"
         onClick={() => onRemove(chart.id)}
@@ -72,93 +64,37 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         <CloseIcon />
       </IconButton>
 
-      {/* Chips + Chart Type Dropdown (scrollable area) */}
+      {/* Field Selectors */}
       <Box
         sx={{
           display: "flex",
           flexWrap: "wrap",
           gap: 2,
-          mb: 2,
+          maxHeight: 280,
+          overflowY: "auto",
           pb: 1,
-          overflowX: "auto",
-          maxHeight: 140,
-          alignContent: "flex-start",
         }}
       >
         {columns.map((col) => {
           const isSelected = chart.selectedFields.includes(col.name);
 
-          return (
-            <Box
-              key={col.name}
-              sx={{
-                flex: "0 0 auto",
-                minWidth: "200px",
-              }}
-            >
-              <Chip
-                label={col.name}
-                clickable
-                sx={{
-                  borderRadius: "16px",
-                  px: 2,
-                  justifyContent: "center",
-                  color: isSelected ? "white" : "black",
-                  backgroundColor: isSelected ? "primary.main" : "grey.300",
-                  "&:hover": {
-                    backgroundColor: isSelected ? "primary.dark" : "grey.400",
-                  },
-                }}
-                onClick={() => onFieldToggle(chart.id, col.name)}
-                onDelete={isSelected ? () => onFieldToggle(chart.id, col.name) : undefined}
-              />
-
-              {isSelected && (
-                <Box sx={{ mt: 1 }}>
-                  {col.type === "numeric" ? (
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <TextField label="From" type="number" size="small" sx={{ width: 100 }} value={chart.fieldFilters[col.name]?.from || ""} onChange={(e) => onFilterChange(chart.id, col.name, "from", e.target.value)} />
-                      <TextField label="To" type="number" size="small" sx={{ width: 100 }} value={chart.fieldFilters[col.name]?.to || ""} onChange={(e) => onFilterChange(chart.id, col.name, "to", e.target.value)} />
-                    </Box>
-                  ) : (
-                    <TextField
-                      size="small"
-                      placeholder=", separated values"
-                      defaultValue={chart.fieldFilters[col]?.values?.join(", ") || ""}
-                      sx={{ width: 200 }}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        const parsed = raw
-                          .split(",")
-                          .map((v) => v.trim())
-                          .filter(Boolean);
-                        onFilterChange(chart.id, col.name, "values", parsed);
-                      }}
-                    />
-                  )}
-
-                  {!chart.isAutoChart && (
-                    <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                      <label>
-                        <input type="checkbox" checked={chart.xField === col.name} disabled={chart.xField && chart.xField !== col.name} onChange={() => handleAxisSelection("xField", col.name)} /> X Axis
-                      </label>
-                      <label>
-                        <input type="checkbox" checked={chart.yField === col.name} disabled={chart.yField && chart.yField !== col.name} onChange={() => handleAxisSelection("yField", col.name)} /> Y Axis
-                      </label>
-                    </Box>
-                  )}
-                </Box>
-              )}
-            </Box>
-          );
+          return <FieldCard key={col.name} col={col} isSelected={isSelected} filters={chart.fieldFilters[col.name]} onToggle={() => onFieldToggle(chart.id, col.name)} onFilterChange={(key, value) => onFilterChange(chart.id, col.name, key, value)} xField={chart.xField} yField={chart.yField} onAxisChange={(axis, value) => onAxisChange(chart.id, axis, value)} chartType={chart.type} />;
         })}
       </Box>
-      {/* Chart layout + dropdown beside chart */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+      {/* Chart + Dropdown Row */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mt: 2,
+        }}
+      >
         {/* Chart SVG */}
         <Box sx={{ flex: 1 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
 
-        {/* Centered Chart Type dropdown */}
+        {/* Chart Type Dropdown */}
         {!chart.isAutoChart && (
           <Box
             sx={{
