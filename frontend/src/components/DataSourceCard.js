@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, IconButton, Paper, FormControl, InputLabel, Select, MenuItem, Chip, TextField, FormControlLabel, Checkbox } from "@mui/material";
+import { Box, Typography, IconButton, Paper, FormControl, InputLabel, Select, MenuItem, Chip, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fieldMeta, onRemove, onSourceChange, onFieldToggle, onFieldFilterChange }) {
@@ -28,19 +28,29 @@ function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fiel
           <Typography variant="subtitle2" sx={{ mb: 0.5, ml: 0.5, fontWeight: 500, color: "text.secondary" }}>
             Fields:
           </Typography>
-          <Box sx={{ display: "flex", overflowX: "auto", gap: 1, py: 1, px: 1, flexWrap: "nowrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              overflowX: "auto",
+              gap: 1,
+              py: 1,
+              px: 1,
+              flexWrap: "nowrap",
+            }}
+          >
             {selectedSource.columns.map((col) => {
-              const isSelected = ds.selectedFields.includes(col);
-              const meta = fieldMeta[ds.selectedSource]?.[col];
+              const colName = col.name;
+              const isSelected = ds.selectedFields.includes(colName);
+              const meta = fieldMeta[ds.selectedSource]?.[colName];
               const isNumeric = meta?.type === "numeric";
 
               return (
-                <Box key={col}>
+                <Box key={colName}>
                   <Chip
-                    label={<Box sx={{ display: "flex", alignItems: "center" }}>{col}</Box>}
+                    label={<Box sx={{ display: "flex", alignItems: "center" }}>{colName}</Box>}
                     clickable
-                    onClick={() => onFieldToggle(index, col)}
-                    onDelete={isSelected ? () => onFieldToggle(index, col) : undefined}
+                    onClick={() => onFieldToggle(index, colName)}
+                    onDelete={isSelected ? () => onFieldToggle(index, colName) : undefined}
                     sx={{
                       borderRadius: "16px",
                       px: 2,
@@ -54,26 +64,26 @@ function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fiel
                     }}
                   />
 
-                  {isSelected && ds.expandedFields.includes(col) && (
+                  {isSelected && ds.expandedFields.includes(colName) && (
                     <Box sx={{ mt: 1, mb: 2, px: 1 }}>
                       {isNumeric ? (
                         <Box sx={{ display: "flex", gap: 1 }}>
-                          <TextField label="From" type="number" size="small" value={ds.fieldFilters[col]?.from || ""} onChange={(e) => onFieldFilterChange(index, col, "from", e.target.value)} />
-                          <TextField label="To" type="number" size="small" value={ds.fieldFilters[col]?.to || ""} onChange={(e) => onFieldFilterChange(index, col, "to", e.target.value)} />
+                          <TextField label="From" type="number" size="small" value={ds.fieldFilters[colName]?.from || ""} onChange={(e) => onFieldFilterChange(index, colName, "from", e.target.value)} />
+                          <TextField label="To" type="number" size="small" value={ds.fieldFilters[colName]?.to || ""} onChange={(e) => onFieldFilterChange(index, colName, "to", e.target.value)} />
                         </Box>
                       ) : (
                         <TextField
                           fullWidth
                           size="small"
                           placeholder=", separated values"
-                          defaultValue={ds.fieldFilters[col]?.values?.join(", ") || ""}
+                          defaultValue={ds.fieldFilters[colName]?.values?.join(", ") || ""}
                           onBlur={(e) => {
                             const raw = e.target.value;
                             const parsed = raw
                               .split(",")
                               .map((val) => val.trim())
                               .filter(Boolean);
-                            onFieldFilterChange(index, col, "values", parsed);
+                            onFieldFilterChange(index, colName, "values", parsed);
                           }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -82,7 +92,7 @@ function DataSourceCard({ index, ds, selectedSourceNames, availableSources, fiel
                                 .split(",")
                                 .map((val) => val.trim())
                                 .filter(Boolean);
-                              onFieldFilterChange(index, col, "values", parsed);
+                              onFieldFilterChange(index, colName, "values", parsed);
                             }
                           }}
                         />

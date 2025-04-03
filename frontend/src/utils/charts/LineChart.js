@@ -4,6 +4,8 @@ export const LineChart = (svgRef, data, xField, yField) => {
   const svg = d3.select(svgRef.current);
   svg.selectAll("*").remove();
 
+  console.log("in line chaert: ", data);
+
   const width = 600;
   const height = 300;
   const margin = { top: 20, right: 30, bottom: 70, left: 70 };

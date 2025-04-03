@@ -12,9 +12,21 @@ from app.filter_database import filter_records
 main = Blueprint('main', __name__)
 
 
-@main.route('/api/hello')
-def hello():
-    return jsonify({"message": "Hello from Flask backend!"})
+"""
+resp: 
+[
+  {
+    "name": "cars.csv",
+    "columns": [
+      {"name": "Manufacturer", "type": "categorical"},
+      {"name": "year", "type": "numeric"},
+      {"name": "price_in_euro", "type": "numeric"}
+    ]
+  },
+  ...
+]
+
+"""
 
 
 @main.route('/api/data-sources', methods=['GET'])
@@ -23,46 +35,41 @@ def get_data_sources():
     sources = []
 
     for file in os.listdir(data_dir):
-        if file.endswith('.csv'):
-            path = os.path.join(data_dir, file)
-            df = pd.read_csv(path, nrows=1)  # Only read header
-            sources.append({
-                "name": file,
-                "columns": list(df.columns)
-            })
+        path = os.path.join(data_dir, file)
+        _, ext = os.path.splitext(file)
+        ext = ext.lower()
+
+        try:
+            if ext == ".csv":
+                df = pd.read_csv(path)
+            elif ext == ".json":
+                df = pd.read_json(path)
+            else:
+                continue  # Skip unsupported files
+        except Exception as e:
+            continue  # Skip files that can't be read
+
+        columns_with_type = []
+        for column in df.columns:
+            try:
+                sample = df[column].dropna().iloc[:10]
+                pd.to_numeric(sample)
+                columns_with_type.append({
+                    "name": column,
+                    "type": "numeric"
+                })
+            except (ValueError, TypeError):
+                columns_with_type.append({
+                    "name": column,
+                    "type": "categorical"
+                })
+
+        sources.append({
+            "name": file,
+            "columns": columns_with_type
+        })
 
     return jsonify(sources)
-
-
-@main.route("/api/data-source-fields", methods=["GET"])
-def get_field_details():
-    source = request.args.get("source")
-    if not source:
-        return jsonify({"error": "No data source specified"}), 400
-
-    file_path = os.path.join(current_app.root_path,
-                             "..", "sample_data", source)
-    if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"}), 404
-
-    df = pd.read_csv(file_path)
-
-    result = {}
-    for col in df.columns:
-        try:
-            # Convert only the first 10 non-null values to numeric
-            sample = df[col].iloc[:10].dropna()
-            pd.to_numeric(sample)
-            result[col] = {
-                "type": "numeric"
-            }
-        except ValueError:
-            # Categorical
-            result[col] = {
-                "type": "categorical"
-            }
-
-    return jsonify(result)
 
 
 @main.route('/api/tasks', methods=['POST'])
@@ -138,14 +145,20 @@ def get_filtered_records():
 
 @main.route('/api/task_fields', methods=['GET'])
 def get_task_column_names():
+    task_id = request.args.get("task_id", type=int)
+    if not task_id:
+        return jsonify({"error": "task_id is required"}), 400
+
     results = (
         db.session.query(
             CombinedFilteredData.column_name,
             CombinedFilteredData.is_categorical
         )
+        .filter(CombinedFilteredData.task_id == task_id)
         .distinct(CombinedFilteredData.column_name)
         .all()
     )
+
     columns = [
         {"name": name, "type": "categorical" if is_cat else "numeric"}
         for name, is_cat in results
@@ -159,13 +172,10 @@ def get_filtered_values():
     selected_fields = data.get("fields", [])  # ["col1", "col2"]
     filters = data.get("filters", {})         # {col1: {from/to/values}}
 
-    print(selected_fields)
-    print(filters)
-    print("-----------------------")
-
     df = filter_records(selected_fields, filters)
-    # print(df)
+
     result = df.dropna().to_dict(orient="records")
+    print("in filter route: ", len(result))
     return jsonify(result)
 
 

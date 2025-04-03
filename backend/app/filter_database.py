@@ -57,15 +57,18 @@ def apply_filters_and_merge(task_id, data_sources, task_filters):
         source_name = ds["selectedSource"]
         selected_fields = ds.get("selectedFields", [])
 
-        print("task_filters: ", task_filters)
         file_path = os.path.join(data_dir, source_name)
 
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             continue
 
-        # Load the file into a DataFrame
-        df = pd.read_csv(file_path)
+        _, ext = os.path.splitext(file_path)
+        ext = ext.lower()
+        if ext == ".csv":
+            df = pd.read_csv(file_path)
+        elif ext == ".json":
+            df = pd.read_json(file_path)
 
         # filter columns
         filtered_df = df[selected_fields] if selected_fields else df
@@ -100,11 +103,7 @@ def apply_filters_and_merge(task_id, data_sources, task_filters):
 
         all_filtered_data[source_name] = filtered_df
 
-    print(df)
-    print(all_filtered_data)
     merged_df = join_dfs(all_filtered_data)
-    print("merged data")
-    print(merged_df)
     add_merged_data_to_db(task_id, merged_df)
     print("added to db")
 
@@ -117,11 +116,16 @@ def filter_records(selected_fields, filters):
 
     df = pd.DataFrame([{
         "row_id": row.row_id,
+        "task_id": row.task_id,
         "column_name": row.column_name,
         "column_value": row.column_value
     } for row in rows])
-    df = df.pivot(index="row_id", columns="column_name",
-                  values="column_value").reset_index()
+
+    df = df.pivot(
+        index=["task_id", "row_id"],
+        columns="column_name",
+        values="column_value",
+    ).reset_index()
 
     for col, condition in filters.items():
         if col not in df.columns:
@@ -144,4 +148,11 @@ def filter_records(selected_fields, filters):
 
     df = df.drop('row_id', axis=1)
     df.drop_duplicates(inplace=True)
+    # print("in filter_db")
+    # print(df)
+    # min_value = df['year'].min()
+    # max_value = df['year'].max()
+
+    # print("Min value:", min_value)
+    # print("Max value:", max_value)
     return df

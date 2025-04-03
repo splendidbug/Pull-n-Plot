@@ -10,15 +10,13 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
-    if (chart.selectedFields.length > 0) {
-      if (chartData && chart.xField && chart.yField) {
-        if (chart.type === "line") {
-          LineChart(svgRef, chartData, chart.xField, chart.yField);
-        } else if (chart.type === "bar") {
-          BarChart(svgRef, chartData, chart.xField, chart.yField);
-        } else if (chart.type === "pie" && chart.xField) {
-          PieChart(svgRef, chartData, chart.xField);
-        }
+    if (chart.selectedFields.length > 0 && chartData) {
+      if (chart.type === "line" && chart.xField && chart.yField) {
+        LineChart(svgRef, chartData, chart.xField, chart.yField);
+      } else if (chart.type === "bar" && chart.xField && chart.yField) {
+        BarChart(svgRef, chartData, chart.xField, chart.yField);
+      } else if (chart.type === "pie" && chart.xField) {
+        PieChart(svgRef, chartData, chart.xField);
       }
     }
   }, [chartData, chart.xField, chart.yField, chart.selectedFields, chart.type]);
@@ -35,12 +33,13 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         body: JSON.stringify({
           fields: chart.selectedFields,
           filters: chart.fieldFilters,
-          task_id: 1,
+          task_id: chart.task_id, // pass correct task ID
         }),
       })
         .then((res) => res.json())
         .then((data) => {
           setChartData(data);
+          console.log("ChartCard: ", data);
         })
         .catch((err) => console.error("Failed to fetch filtered values:", err));
     }, 1000);
@@ -73,14 +72,17 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
         <CloseIcon />
       </IconButton>
 
-      {/* Chips + Chart Type Dropdown */}
+      {/* Chips + Chart Type Dropdown (scrollable area) */}
       <Box
         sx={{
           display: "flex",
-          gap: 2,
           flexWrap: "wrap",
-          alignItems: "flex-start",
+          gap: 2,
           mb: 2,
+          pb: 1,
+          overflowX: "auto",
+          maxHeight: 140,
+          alignContent: "flex-start",
         }}
       >
         {columns.map((col) => {
@@ -90,11 +92,7 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
             <Box
               key={col.name}
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                mb: 1,
-                mr: 2,
+                flex: "0 0 auto",
                 minWidth: "200px",
               }}
             >
@@ -154,22 +152,35 @@ const ChartCard = ({ chart, columns, onFieldToggle, onFilterChange, onRemove, on
             </Box>
           );
         })}
+      </Box>
+      {/* Chart layout + dropdown beside chart */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* Chart SVG */}
+        <Box sx={{ flex: 1 }}>{chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}</Box>
 
-        {/* Chart type dropdown */}
+        {/* Centered Chart Type dropdown */}
         {!chart.isAutoChart && (
-          <FormControl size="small" sx={{ minWidth: 150 }} disabled={chart.isAutoChart}>
-            <InputLabel>Chart Type</InputLabel>
-            <Select value={chart.type} label="Chart Type" onChange={(e) => onChartTypeChange(chart.id, e.target.value)}>
-              <MenuItem value="line">Line</MenuItem>
-              <MenuItem value="bar">Bar</MenuItem>
-              <MenuItem value="pie">Pie</MenuItem>
-            </Select>
-          </FormControl>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              minWidth: 180,
+              pl: 3,
+            }}
+          >
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Chart Type</InputLabel>
+              <Select value={chart.type} label="Chart Type" onChange={(e) => onChartTypeChange(chart.id, e.target.value)}>
+                <MenuItem value="line">Line</MenuItem>
+                <MenuItem value="bar">Bar</MenuItem>
+                <MenuItem value="pie">Pie</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         )}
       </Box>
-
-      {/* Chart SVG */}
-      {chart.selectedFields.length > 0 && <svg ref={svgRef}></svg>}
     </Paper>
   );
 };

@@ -41,20 +41,27 @@ function CreateTask() {
   };
   const [fieldMeta, setFieldMeta] = useState({});
 
-  const handleSourceChange = async (index, sourceName) => {
+  const handleSourceChange = (index, sourceName) => {
     const updated = [...dataSources];
     updated[index].selectedSource = sourceName;
     updated[index].selectedFields = [];
     updated[index].expandedFields = [];
     updated[index].fieldFilters = {};
-
     setDataSources(updated);
 
-    // Fetch field metadata
-    const res = await fetch(`http://localhost:5000/api/data-source-fields?source=${sourceName}`);
-    const meta = await res.json();
+    // Find the metadata from availableSources
+    const sourceMeta = availableSources.find((s) => s.name === sourceName);
+    if (sourceMeta) {
+      const columnsMeta = {};
+      sourceMeta.columns.forEach((col) => {
+        columnsMeta[col.name] = { type: col.type };
+      });
 
-    setFieldMeta((prev) => ({ ...prev, [sourceName]: meta }));
+      setFieldMeta((prev) => ({
+        ...prev,
+        [sourceName]: columnsMeta,
+      }));
+    }
   };
 
   const handleFieldToggle = (index, field) => {

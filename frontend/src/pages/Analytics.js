@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, MenuItem, FormControl, Select, InputLabel } from "@mui/material";
 import ChartCard from "../components/ChartCard";
 
 let chartIdCounter = 1;
@@ -9,6 +9,16 @@ const Analytics = () => {
   const [charts, setCharts] = useState([]);
   const [xFields, setxField] = useState("");
   const [yFields, setyField] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [selectedTaskId, setSelectedTaskId] = useState("");
+
+  // Load completed tasks
+  useEffect(() => {
+    fetch("http://localhost:5000/api/tasks/completed")
+      .then((res) => res.json())
+      .then(setTasks)
+      .catch((err) => console.error("Error loading tasks:", err));
+  }, []);
 
   const handleAxisChange = (chartId, axis, fieldName) => {
     setCharts((prev) =>
@@ -28,11 +38,13 @@ const Analytics = () => {
 
   // Fetch column metadata (name & type)
   useEffect(() => {
-    fetch("http://localhost:5000/api/task_fields")
+    if (!selectedTaskId) return;
+
+    fetch(`http://localhost:5000/api/task_fields?task_id=${selectedTaskId}`)
       .then((res) => res.json())
       .then((data) => {
         setColumns(data);
-
+        setCharts([]);
         const fieldNames = new Set(data.map((col) => col.name));
         const autoCharts = [];
 
@@ -75,7 +87,7 @@ const Analytics = () => {
         }
       })
       .catch((err) => console.error("Error fetching column names:", err));
-  }, []);
+  }, [selectedTaskId]);
 
   // Add a new chart
   const handleAddChart = () => {
@@ -103,11 +115,6 @@ const Analytics = () => {
         const selected = chart.selectedFields.includes(field);
         const updatedFields = selected ? chart.selectedFields.filter((f) => f !== field) : [...chart.selectedFields, field];
 
-        // Auto-assign chart type based on selected fields
-        let updatedType = chart.type;
-        const fieldsSet = new Set(updatedFields);
-
-        // Handle filters
         const updatedFilters = { ...chart.fieldFilters };
         if (selected) {
           delete updatedFilters[field];
@@ -115,14 +122,18 @@ const Analytics = () => {
           updatedFilters[field] = {};
         }
 
-        return {
+        const updatedChart = {
           ...chart,
           selectedFields: updatedFields,
           fieldFilters: updatedFilters,
-          type: updatedType,
-          xFields,
-          yFields,
         };
+
+        if (selected) {
+          if (chart.xField === field) updatedChart.xField = null;
+          if (chart.yField === field) updatedChart.yField = null;
+        }
+
+        return updatedChart;
       })
     );
   };
@@ -151,6 +162,18 @@ const Analytics = () => {
       <Typography variant="h5" gutterBottom>
         Analytics Dashboard
       </Typography>
+
+      {/* Task Selector */}
+      <FormControl fullWidth sx={{ mb: 3 }}>
+        <InputLabel>Select Task</InputLabel>
+        <Select value={selectedTaskId} label="Select Task" onChange={(e) => setSelectedTaskId(e.target.value)}>
+          {tasks.map((task) => (
+            <MenuItem key={task.id} value={task.id}>
+              {task.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       {/* Render each chart */}
       {charts.map((chart) => (
